@@ -1,0 +1,21 @@
+[project]
+name = "grokipedia-mcp"
+version = "0.1.0"
+description = "MCP server for Grokipedia"
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = ["grokipedia-api-sdk>=0.1.2", "mcp>=1.19.0"]
+
+[project.scripts]
+grokipedia-mcp = "grokipedia_mcp.__main__:main"
+
+[dependency-groups]
+dev = ["mcp[cli]>=1.19.0"]
+
+[tool.uv]
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
