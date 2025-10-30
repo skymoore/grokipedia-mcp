@@ -10,7 +10,6 @@ from grokipedia_api_sdk.exceptions import (
     GrokipediaNetworkError,
     GrokipediaNotFoundError,
 )
-from grokipedia_api_sdk.models import Page, SearchResult
 
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.session import ServerSession
@@ -123,7 +122,7 @@ async def get_page(
         client = ctx.request_context.lifespan_context.client
         result = await client.get_page(slug=slug, include_content=True)
 
-        if not result.found:
+        if not result.found or result.page is None:
             await ctx.warning(f"Page not found: '{slug}', searching for alternatives")
             search_result = await client.search(query=slug, limit=5)
             if search_result.results:
@@ -207,7 +206,7 @@ async def get_page_content(
         client = ctx.request_context.lifespan_context.client
         result = await client.get_page(slug=slug, include_content=True)
 
-        if not result.found:
+        if not result.found or result.page is None:
             await ctx.warning(f"Page not found: '{slug}'")
             raise ValueError(f"Page not found: {slug}")
 
@@ -275,7 +274,7 @@ async def get_page_citations(
         client = ctx.request_context.lifespan_context.client
         result = await client.get_page(slug=slug, include_content=False)
 
-        if not result.found:
+        if not result.found or result.page is None:
             await ctx.warning(f"Page not found: '{slug}'")
             raise ValueError(f"Page not found: {slug}")
 
@@ -364,7 +363,7 @@ async def get_related_pages(
         client = ctx.request_context.lifespan_context.client
         result = await client.get_page(slug=slug, include_content=False)
 
-        if not result.found:
+        if not result.found or result.page is None:
             await ctx.warning(f"Page not found: '{slug}'")
             raise ValueError(f"Page not found: {slug}")
 
@@ -457,7 +456,7 @@ async def get_page_section(
         client = ctx.request_context.lifespan_context.client
         result = await client.get_page(slug=slug, include_content=True)
 
-        if not result.found:
+        if not result.found or result.page is None:
             await ctx.warning(f"Page not found: '{slug}'")
             raise ValueError(f"Page not found: {slug}")
 
@@ -513,11 +512,11 @@ async def get_page_section(
             "section_content": section_content,
             "content_length": len(section_content),
         }
-        
+
         if is_truncated:
             structured["_truncated"] = True
             structured["_original_length"] = section_len
-        
+
         return CallToolResult(
             content=[TextContent(type="text", text=text_output)],
             structuredContent=structured,
