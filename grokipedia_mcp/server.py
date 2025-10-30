@@ -1,7 +1,9 @@
 import re
+import base64
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Annotated
 
 from grokipedia_api_sdk import AsyncClient
@@ -14,7 +16,7 @@ from grokipedia_api_sdk.exceptions import (
 
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.session import ServerSession
-from mcp.types import CallToolResult, TextContent, ToolAnnotations
+from mcp.types import CallToolResult, Icon, TextContent, ToolAnnotations
 from pydantic import Field
 
 
@@ -29,10 +31,18 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
         yield AppContext(client=client)
 
 
+# Load the icon file and convert to data URI
+icon_path = Path(__file__).parent / "icon.png"
+icon_data = base64.standard_b64encode(icon_path.read_bytes()).decode()
+icon_data_uri = f"data:image/png;base64,{icon_data}"
+
+icon = Icon(src=icon_data_uri, mimeType="image/png", sizes=["64x64"])
+
 mcp = FastMCP(
     "Grokipedia",
     lifespan=app_lifespan,
     instructions="MCP server for searching and retrieving content from Grokipedia, a wiki-style knowledge base.",
+    icons=[icon],
 )
 
 
@@ -51,15 +61,7 @@ async def search(
     min_views: Annotated[int | None, Field(description="Filter to articles with at least this many views (optional)", ge=0)] = None,
     ctx: Context[ServerSession, AppContext] | None = None,
 ) -> CallToolResult:
-    """Search for articles in Grokipedia with optional filtering and sorting.
-    
-    Args:
-        query: Search query string to find matching articles
-        limit: Maximum number of results to return (default: 12, max: 50)
-        offset: Pagination offset for results (default: 0)
-        sort_by: Sort results by 'relevance' or 'views' (default: relevance)
-        min_views: Filter to articles with at least this many views (optional)
-    """
+    """Search for articles in Grokipedia with optional filtering and sorting."""
     if ctx is None:
         raise ValueError("Context is required")
 
@@ -668,18 +670,15 @@ async def get_page_sections(
         
         for line in lines:
             stripped = line.strip()
-            if stripped.startswith('#'):
+            if stripped.startswith("#"):
                 # Count the number of # symbols for header level
-                level = len(line) - len(line.lstrip('#'))
-                header_text = stripped.lstrip('#').strip()
+                level = len(line) - len(line.lstrip("#"))
+                header_text = stripped.lstrip("#").strip()
                 if header_text:  # Only include non-empty headers
-                    sections.append({
-                        "level": level,
-                        "header": header_text
-                    })
-        
+                    sections.append({"level": level, "header": header_text})
+
         await ctx.info(f"Found {len(sections)} section headers in '{page.title}'")
-        
+
         if not sections:
             text_output = f"# {page.title}\n\nNo section headers found."
             structured = {
