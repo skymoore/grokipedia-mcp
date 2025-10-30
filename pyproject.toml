@@ -2,7 +2,7 @@
 name = "grokipedia-mcp"
 version = "0.2.2"
 description = "MCP server for Grokipedia"
-license = "MIT"
+license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
