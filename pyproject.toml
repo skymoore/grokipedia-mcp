@@ -1,6 +1,6 @@
 [project]
 name = "grokipedia-mcp"
-version = "0.1.2"
+version = "0.1.3"
 description = "MCP server for Grokipedia"
 license = "MIT"
 readme = "README.md"

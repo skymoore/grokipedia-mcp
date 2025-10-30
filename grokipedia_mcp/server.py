@@ -587,3 +587,91 @@ I will:
 3. Highlight similarities and differences
 
 Please provide the two topics you want to compare (or confirm the suggestions above)."""
+
+
+@mcp.tool()
+async def get_page_sections(
+    slug: str,
+    ctx: Context[ServerSession, AppContext] | None = None,
+) -> CallToolResult:
+    """Get a list of all section headers in an article."""
+    if ctx is None:
+        raise ValueError("Context is required")
+
+    await ctx.debug(f"Fetching section headers for: '{slug}'")
+
+    try:
+        client = ctx.request_context.lifespan_context.client
+        result = await client.get_page(slug=slug, include_content=True)
+
+        if not result.found or result.page is None:
+            await ctx.warning(f"Page not found: '{slug}', searching for alternatives")
+            search_result = await client.search(query=slug, limit=5)
+            if search_result.results:
+                suggestions = [f"{r.title} ({r.slug})" for r in search_result.results[:3]]
+                await ctx.info(f"Found {len(search_result.results)} similar pages")
+                raise ValueError(
+                    f"Page not found: {slug}. Did you mean one of these? {', '.join(suggestions)}"
+                )
+            raise ValueError(f"Page not found: {slug}")
+
+        page = result.page
+        content = page.content or ""
+        
+        # Extract all markdown headers
+        lines = content.split('\n')
+        sections = []
+        
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith('#'):
+                # Count the number of # symbols for header level
+                level = len(line) - len(line.lstrip('#'))
+                header_text = stripped.lstrip('#').strip()
+                if header_text:  # Only include non-empty headers
+                    sections.append({
+                        "level": level,
+                        "header": header_text
+                    })
+        
+        await ctx.info(f"Found {len(sections)} section headers in '{page.title}'")
+        
+        if not sections:
+            text_output = f"# {page.title}\n\nNo section headers found."
+            structured = {
+                "slug": page.slug,
+                "title": page.title,
+                "sections": [],
+                "count": 0,
+            }
+        else:
+            text_parts = [f"# {page.title}", "", f"Found {len(sections)} sections:", ""]
+            for i, section in enumerate(sections, 1):
+                indent = "  " * (section["level"] - 1)
+                text_parts.append(f"{i}. {indent}{section['header']} (Level {section['level']})")
+            
+            text_output = "\n".join(text_parts)
+            structured = {
+                "slug": page.slug,
+                "title": page.title,
+                "sections": sections,
+                "count": len(sections),
+            }
+        
+        return CallToolResult(
+            content=[TextContent(type="text", text=text_output)],
+            structuredContent=structured,
+        )
+
+    except GrokipediaNotFoundError as e:
+        await ctx.error(f"Page not found: {e}")
+        raise ValueError(f"Page not found: {slug}") from e
+    except GrokipediaBadRequestError as e:
+        await ctx.error(f"Bad request: {e}")
+        raise ValueError(f"Invalid page slug: {e}") from e
+    except GrokipediaNetworkError as e:
+        await ctx.error(f"Network error: {e}")
+        raise RuntimeError(f"Failed to connect to Grokipedia API: {e}") from e
+    except GrokipediaAPIError as e:
+        await ctx.error(f"API error: {e}")
+        raise RuntimeError(f"Grokipedia API error: {e}") from e
