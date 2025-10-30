@@ -4,3 +4,22 @@ build:
   dockerBuildPath: "."
 startCommand:
   type: http
+  configSchema:
+    type: "object"
+    properties:
+      host:
+        type: "string"
+        title: "Host"
+        description: "Host for the server to bind to"
+        default: "0.0.0.0"
+      port:
+        type: "number"
+        title: "Port Number"
+        description: "Port to run the server on"
+        minimum: 80
+        maximum: 9999
+        default: 8888
+  exampleConfig:
+    host: "0.0.0.0"
+    port: 8888
+    
