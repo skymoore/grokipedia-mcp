@@ -26,6 +26,7 @@ You should see the Grokipedia server available with these tools:
 - `get_page_content` - Get full content
 - `get_page_citations` - Get citations
 - `get_related_pages` - Get linked pages
+- `get_page_sections` - List all section headers
 - `get_page_section` - Extract specific sections
 
 And these prompts:
@@ -217,12 +218,29 @@ Get pages that are linked from a specific article.
 
 ---
 
+### `get_page_sections`
+
+Get a list of all section headers in an article.
+
+**Parameters:**
+- `slug` (string, required) - Article identifier
+
+**Returns:** List of all section headers with their levels (h1, h2, h3, etc.).
+
+**Use this when:** You want to see the structure/outline of an article before reading specific sections.
+
+**Example:**
+```json
+{"slug": "Machine_learning"}
+```
+
+---
+
 ### `get_page_section`
 
 Extract a specific section from an article by header name.
 
 **Parameters:**
-
 - `slug` (string, required) - Article identifier
 - `section_header` (string, required) - Section header to extract (case-insensitive)
 - `max_length` (int, optional, default: 5000) - Maximum section content length
@@ -232,7 +250,6 @@ Extract a specific section from an article by header name.
 **Use this when:** You need just one section of a long article (e.g., "Applications", "History", "Examples").
 
 **Examples:**
-
 ```json
 // Get specific section
 {"slug": "Neural_networks", "section_header": "Applications"}
