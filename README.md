@@ -4,6 +4,12 @@
 
 MCP server for searching and retrieving content from Grokipedia
 
+The User of the MCP assumes full responsibility for interacting with [Grokipedia](https://grokipedia.com).
+
+Please see the [Xai Terms of Service](https://x.ai/legal/terms-of-service) if you have any doubts.
+
+Elon, please don't sue me.  I only wanted my agents to have access to truthful information and stop referencing wikipedia all the time.
+
 ## Quick Start
 
 Add this to your MCP configuration file:
@@ -225,6 +231,7 @@ Get pages that are linked from a specific article.
 Get a list of all section headers in an article.
 
 **Parameters:**
+
 - `slug` (string, required) - Article identifier
 
 **Returns:** List of all section headers with their levels (h1, h2, h3, etc.).
@@ -232,6 +239,7 @@ Get a list of all section headers in an article.
 **Use this when:** You want to see the structure/outline of an article before reading specific sections.
 
 **Example:**
+
 ```json
 {"slug": "Machine_learning"}
 ```
@@ -243,6 +251,7 @@ Get a list of all section headers in an article.
 Extract a specific section from an article by header name.
 
 **Parameters:**
+
 - `slug` (string, required) - Article identifier
 - `section_header` (string, required) - Section header to extract (case-insensitive)
 - `max_length` (int, optional, default: 5000) - Maximum section content length
@@ -252,6 +261,7 @@ Extract a specific section from an article by header name.
 **Use this when:** You need just one section of a long article (e.g., "Applications", "History", "Examples").
 
 **Examples:**
+
 ```json
 // Get specific section
 {"slug": "Neural_networks", "section_header": "Applications"}

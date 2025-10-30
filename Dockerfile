@@ -14,6 +14,8 @@ COPY LICENSE .
 # Copy source code
 COPY grokipedia_mcp ./grokipedia_mcp
 
+ENV UV_COMPILE_BYTECODE=1
+
 # Build and install
 RUN uv build && \
   uv pip install --system dist/*.whl

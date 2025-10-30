@@ -33,9 +33,9 @@ def main(transport: str, host: str, port: int | None):
 
     if transport in ["sse", "streamable-http"]:
         click.echo(f"Starting {transport} server on {host}:{port}")
-        
+
         app = mcp.streamable_http_app()
-        
+
         app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
@@ -45,8 +45,8 @@ def main(transport: str, host: str, port: int | None):
             expose_headers=["mcp-session-id", "mcp-protocol-version"],
             max_age=86400,
         )
-        
-        uvicorn.run(app, host=host, port=port, log_level="debug")
+
+        uvicorn.run(app, host=host, port=port, log_level="info")
     else:
         mcp.run(transport=transport)
 

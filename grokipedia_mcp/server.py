@@ -2,6 +2,7 @@ import re
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+from typing import Annotated
 
 from grokipedia_api_sdk import AsyncClient
 from grokipedia_api_sdk.exceptions import (
@@ -13,7 +14,8 @@ from grokipedia_api_sdk.exceptions import (
 
 from mcp.server.fastmcp import Context, FastMCP
 from mcp.server.session import ServerSession
-from mcp.types import CallToolResult, TextContent
+from mcp.types import CallToolResult, TextContent, ToolAnnotations
+from pydantic import Field
 
 
 @dataclass
@@ -34,23 +36,29 @@ mcp = FastMCP(
 )
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True
+    ), 
+)
 async def search(
-    query: str,
-    limit: int = 12,
-    offset: int = 0,
-    sort_by: str = "relevance",
-    min_views: int | None = None,
+    query: Annotated[str, Field(description="Search query string to find matching articles")],
+    limit: Annotated[int, Field(description="Maximum number of results to return (default: 12, max: 50)", ge=1, le=50)] = 12,
+    offset: Annotated[int, Field(description="Pagination offset for results (default: 0)", ge=0)] = 0,
+    sort_by: Annotated[str, Field(description="Sort results by 'relevance' or 'views' (default: relevance)")] = "relevance",
+    min_views: Annotated[int | None, Field(description="Filter to articles with at least this many views (optional)", ge=0)] = None,
     ctx: Context[ServerSession, AppContext] | None = None,
 ) -> CallToolResult:
     """Search for articles in Grokipedia with optional filtering and sorting.
     
     Args:
-        query: Search query string
-        limit: Maximum number of results (default: 12)
-        offset: Pagination offset (default: 0)
+        query: Search query string to find matching articles
+        limit: Maximum number of results to return (default: 12, max: 50)
+        offset: Pagination offset for results (default: 0)
         sort_by: Sort results by 'relevance' or 'views' (default: relevance)
-        min_views: Minimum view count filter (optional)
+        min_views: Filter to articles with at least this many views (optional)
     """
     if ctx is None:
         raise ValueError("Context is required")
@@ -106,10 +114,16 @@ async def search(
         raise RuntimeError(f"Grokipedia API error: {e}") from e
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True
+    )
+)
 async def get_page(
-    slug: str,
-    max_content_length: int = 5000,
+    slug: Annotated[str, Field(description="Unique slug identifier of the page to retrieve")],
+    max_content_length: Annotated[int, Field(description="Maximum length of content to return (default: 5000)", ge=100)] = 5000,
     ctx: Context[ServerSession, AppContext] | None = None,
 ) -> CallToolResult:
     """Get complete page information including metadata, content preview, and citations summary."""
@@ -190,10 +204,16 @@ async def get_page(
         raise RuntimeError(f"Grokipedia API error: {e}") from e
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True
+    )
+)
 async def get_page_content(
-    slug: str,
-    max_length: int = 10000,
+    slug: Annotated[str, Field(description="Unique slug identifier of the page to retrieve content from")],
+    max_length: Annotated[int, Field(description="Maximum length of content to return (default: 10000)", ge=100)] = 10000,
     ctx: Context[ServerSession, AppContext] | None = None,
 ) -> CallToolResult:
     """Get only the article content without citations or metadata."""
@@ -258,10 +278,16 @@ async def get_page_content(
         raise RuntimeError(f"Grokipedia API error: {e}") from e
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True
+    )
+)
 async def get_page_citations(
-    slug: str,
-    limit: int | None = None,
+    slug: Annotated[str, Field(description="Unique slug identifier of page to retrieve citations from")],
+    limit: Annotated[int | None, Field(description="Maximum number of citations to return (optional, returns all if not specified)", ge=1)] = None,
     ctx: Context[ServerSession, AppContext] | None = None,
 ) -> CallToolResult:
     """Get the citations list for a specific page."""
@@ -347,10 +373,16 @@ async def get_page_citations(
         raise RuntimeError(f"Grokipedia API error: {e}") from e
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True
+    )
+)
 async def get_related_pages(
-    slug: str,
-    limit: int = 10,
+    slug: Annotated[str, Field(description="Unique slug identifier of page to find related pages for")],
+    limit: Annotated[int, Field(description="Maximum number of related pages to return (default: 10)", ge=1, le=50)] = 10,
     ctx: Context[ServerSession, AppContext] | None = None,
 ) -> CallToolResult:
     """Get pages that are linked from the specified page."""
@@ -439,11 +471,17 @@ async def get_related_pages(
         raise RuntimeError(f"Grokipedia API error: {e}") from e
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True
+    )
+)
 async def get_page_section(
-    slug: str,
-    section_header: str,
-    max_length: int = 5000,
+    slug: Annotated[str, Field(description="Unique slug identifier of page to extract section from")],
+    section_header: Annotated[str, Field(description="Exact header text of the section to extract (case-insensitive)")],
+    max_length: Annotated[int, Field(description="Maximum length of section content to return (default: 5000)", ge=100)] = 5000,
     ctx: Context[ServerSession, AppContext] | None = None,
 ) -> CallToolResult:
     """Extract a specific section from an article by header name."""
@@ -478,7 +516,7 @@ async def get_page_section(
             elif section_start is not None:
                 if line.startswith('#'):
                     current_level = len(line) - len(line.lstrip('#'))
-                    if current_level <= section_level:
+                    if section_level is not None and current_level <= section_level:
                         section_end = i
                         break
         
@@ -589,9 +627,15 @@ I will:
 Please provide the two topics you want to compare (or confirm the suggestions above)."""
 
 
-@mcp.tool()
+@mcp.tool(
+    annotations=ToolAnnotations(
+        readOnlyHint=True,
+        destructiveHint=False,
+        idempotentHint=True
+    )
+)
 async def get_page_sections(
-    slug: str,
+    slug: Annotated[str, Field(description="Unique slug identifier of page to list sections for")],
     ctx: Context[ServerSession, AppContext] | None = None,
 ) -> CallToolResult:
     """Get a list of all section headers in an article."""
@@ -648,8 +692,10 @@ async def get_page_sections(
             text_parts = [f"# {page.title}", "", f"Found {len(sections)} sections:", ""]
             for i, section in enumerate(sections, 1):
                 indent = "  " * (section["level"] - 1)
-                text_parts.append(f"{i}. {indent}{section['header']} (Level {section['level']})")
-            
+                text_parts.append(
+                    f"{i}. {indent}{section['header']} (Level {section['level']})"
+                )
+
             text_output = "\n".join(text_parts)
             structured = {
                 "slug": page.slug,
@@ -657,7 +703,7 @@ async def get_page_sections(
                 "sections": sections,
                 "count": len(sections),
             }
-        
+
         return CallToolResult(
             content=[TextContent(type="text", text=text_output)],
             structuredContent=structured,
