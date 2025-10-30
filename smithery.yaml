@@ -3,21 +3,4 @@ build:
   dockerfile: "Dockerfile.smithery"
   dockerBuildPath: "."
 startCommand:
-  type: "http"
-  configSchema:
-    type: object
-    properties:
-      MCP_TRANSPORT:
-        type: string
-        enum: ["stdio", "sse", "streamable-http"]
-        default: "streamable-http"
-        description: "Transport protocol for MCP communication"
-      PORT:
-        type: integer
-        minimum: 1
-        maximum: 65535
-        default: 8888
-        description: "Port to bind to for HTTP transports"
-  exampleConfig:
-      MCP_TRANSPORT: streamable-http
-      PORT: 8001
+  type: http
