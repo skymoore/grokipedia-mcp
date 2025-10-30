@@ -1,5 +1,7 @@
 # Grokipedia MCP Server
 
+[![smithery badge](https://smithery.ai/badge/@skymoore/grokipedia-mcp)](https://smithery.ai/server/@skymoore/grokipedia-mcp)
+
 MCP server for searching and retrieving content from Grokipedia
 
 ## Quick Start
