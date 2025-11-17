@@ -1,15 +1,12 @@
-[![Add to Cursor](https://fastmcp.me/badges/cursor_dark.svg)](https://fastmcp.me/MCP/Details/1349/grokipedia)
-[![Add to VS Code](https://fastmcp.me/badges/vscode_dark.svg)](https://fastmcp.me/MCP/Details/1349/grokipedia)
-[![Add to Claude](https://fastmcp.me/badges/claude_dark.svg)](https://fastmcp.me/MCP/Details/1349/grokipedia)
-[![Add to ChatGPT](https://fastmcp.me/badges/chatgpt_dark.svg)](https://fastmcp.me/MCP/Details/1349/grokipedia)
-[![Add to Codex](https://fastmcp.me/badges/codex_dark.svg)](https://fastmcp.me/MCP/Details/1349/grokipedia)
-[![Add to Gemini](https://fastmcp.me/badges/gemini_dark.svg)](https://fastmcp.me/MCP/Details/1349/grokipedia)
-
 # Grokipedia MCP Server
 
 [![smithery badge](https://smithery.ai/badge/@skymoore/grokipedia-mcp)](https://smithery.ai/server/@skymoore/grokipedia-mcp)
 
 MCP server for searching and retrieving content from Grokipedia
+
+<a href="https://glama.ai/mcp/servers/@skymoore/grokipedia-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@skymoore/grokipedia-mcp/badge" alt="Grokipedia Server MCP server" />
+</a>
 
 The User of the MCP assumes full responsibility for interacting with [Grokipedia](https://grokipedia.com).
 
