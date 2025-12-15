@@ -9,6 +9,10 @@
 
 [![smithery badge](https://smithery.ai/badge/@skymoore/grokipedia-mcp)](https://smithery.ai/server/@skymoore/grokipedia-mcp)
 
+<a href="https://glama.ai/mcp/servers/@skymoore/grokipedia-mcp">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@skymoore/grokipedia-mcp/badge" alt="Grokipedia MCP Server" />
+</a>
+
 MCP server for searching and retrieving content from Grokipedia
 
 The User of the MCP assumes full responsibility for interacting with [Grokipedia](https://grokipedia.com).
@@ -345,3 +349,4 @@ uv run mcp dev main.py
 ## License
 
 MIT
+
