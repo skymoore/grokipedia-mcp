@@ -1,9 +1,7 @@
 import re
-import base64
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Annotated
 
 from grokipedia_api_sdk import AsyncClient
@@ -15,8 +13,7 @@ from grokipedia_api_sdk.exceptions import (
 )
 
 from fastmcp import Context, FastMCP
-from mcp.server.session import ServerSession
-from mcp.types import CallToolResult, Icon, TextContent, ToolAnnotations
+from mcp.types import CallToolResult, TextContent, ToolAnnotations
 from pydantic import Field
 
 
@@ -30,13 +27,6 @@ async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     async with AsyncClient() as client:
         yield AppContext(client=client)
 
-
-# Load the icon file and convert to data URI
-icon_path = Path(__file__).parent / "icon.png"
-icon_data = base64.standard_b64encode(icon_path.read_bytes()).decode()
-icon_data_uri = f"data:image/png;base64,{icon_data}"
-
-icon = Icon(src=icon_data_uri, mimeType="image/png", sizes=["64x64"])
 
 mcp = FastMCP(
     "Grokipedia",
