@@ -1,15 +1,17 @@
 import os
+
 import click
-import uvicorn
-from grokipedia_mcp.server import mcp
+from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
+
+from grokipedia_mcp.server import mcp
 
 
 @click.command()
 @click.option(
     "--transport",
     "-t",
-    type=click.Choice(["stdio", "sse", "streamable-http"], case_sensitive=False),
+    type=click.Choice(["stdio", "http", "streamable-http", "sse"], case_sensitive=False),
     default="stdio",
     help="Transport protocol to use (default: stdio)",
 )
@@ -27,16 +29,12 @@ from starlette.middleware.cors import CORSMiddleware
 )
 def main(transport: str, host: str, port: int | None):
     transport = os.getenv("MCP_TRANSPORT", transport)
-    
+
     if port is None:
         port = int(os.getenv("PORT", "8888"))
 
-    if transport in ["sse", "streamable-http"]:
-        click.echo(f"Starting {transport} server on {host}:{port}")
-
-        app = mcp.streamable_http_app()
-
-        app.add_middleware(
+    if transport in ["http", "streamable-http", "sse"]:
+        cors = Middleware(
             CORSMiddleware,
             allow_origins=["*"],
             allow_credentials=True,
@@ -45,8 +43,12 @@ def main(transport: str, host: str, port: int | None):
             expose_headers=["mcp-session-id", "mcp-protocol-version"],
             max_age=86400,
         )
-
-        uvicorn.run(app, host=host, port=port, log_level="info")
+        mcp.run(
+            transport=transport,
+            host=host,
+            port=port,
+            middleware=[cors],
+        )
     else:
         mcp.run(transport=transport)
 
