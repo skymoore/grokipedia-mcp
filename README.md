@@ -44,7 +44,7 @@ You should see the Grokipedia server available with these tools:
 - `get_page` - Get page overview
 - `get_page_content` - Get full content
 - `get_page_citations` - Get citations
-- `get_related_pages` - Get linked pages
+- `get_linked_pages` - Get pages linked from an article
 - `get_page_sections` - List all section headers
 - `get_page_section` - Extract specific sections
 
@@ -212,26 +212,26 @@ Get the citations list for a specific page.
 
 ---
 
-### `get_related_pages`
+### `get_linked_pages`
 
-Get pages that are linked from a specific article.
+Get pages that are linked from a specific article. Grokipedia no longer publishes a curated linked-pages field, so links are derived from `/page/<slug>` markdown links in the article content and ranked by mention frequency, then first position.
 
 **Parameters:**
 
 - `slug` (string, required) - Article identifier
-- `limit` (int, optional, default: 10) - Maximum number of related pages to return
+- `limit` (int, optional, default: 10) - Maximum number of linked pages to return
 
-**Returns:** List of related/linked pages with titles and slugs.
+**Returns:** List of linked pages with titles, slugs, and mention counts.
 
-**Use this when:** You want to discover related topics or explore connections between articles.
+**Use this when:** You want to discover topics an article references or explore connections between articles.
 
 **Examples:**
 
 ```json
-// Get related pages
+// Get linked pages
 {"slug": "Machine_learning"}
 
-// Get more related pages
+// Get more linked pages
 {"slug": "Quantum_computing", "limit": 20}
 ```
 

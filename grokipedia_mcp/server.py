@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import Annotated
 
-from grokipedia_api_sdk import AsyncClient
+from grokipedia_api_sdk import AsyncClient, Page
 from grokipedia_api_sdk.exceptions import (
     GrokipediaAPIError,
     GrokipediaBadRequestError,
@@ -33,6 +33,38 @@ mcp = FastMCP(
     lifespan=app_lifespan,
     instructions="MCP server for searching and retrieving content from Grokipedia, a wiki-style knowledge base.",
 )
+
+
+def _derive_linked_pages(page: Page) -> list[dict]:
+    """Derive pages linked from an article's markdown content.
+
+    Grokipedia no longer exposes a linkedPages field (the /api/page
+    endpoint is gone and /api/page-preview omits it), so links are
+    extracted from /page/<slug> markdown links and ranked by mention
+    frequency, then first position.
+    """
+    if not page.content:
+        return []
+
+    freq: dict[str, int] = {}
+    first_pos: dict[str, int] = {}
+    titles: dict[str, str] = {}
+    for match in re.finditer(
+        r"\[([^\]]*)\]\(/page/([^)\s#(]+(?:\([^)\s]*\))*)(?:#[^)]*)?\)",
+        page.content,
+    ):
+        linked_slug = match.group(2)
+        if linked_slug == page.slug:
+            continue
+        freq[linked_slug] = freq.get(linked_slug, 0) + 1
+        if linked_slug not in first_pos:
+            first_pos[linked_slug] = match.start()
+            titles[linked_slug] = match.group(1).strip() or linked_slug
+
+    return [
+        {"title": titles[linked_slug], "slug": linked_slug, "mentions": freq[linked_slug]}
+        for linked_slug in sorted(freq, key=lambda s: (-freq[s], first_pos[s]))
+    ]
 
 
 @mcp.tool(
@@ -125,8 +157,7 @@ async def get_page(
 
     try:
         client = ctx.request_context.lifespan_context.client
-        result = await client.get_page(slug=slug, include_content=True)
-
+        result = await client.get_page(slug=slug)
         if not result.found or result.page is None:
             await ctx.warning(f"Page not found: '{slug}', searching for alternatives")
             search_result = await client.search(query=slug, limit=5)
@@ -215,8 +246,7 @@ async def get_page_content(
 
     try:
         client = ctx.request_context.lifespan_context.client
-        result = await client.get_page(slug=slug, include_content=True)
-
+        result = await client.get_page(slug=slug)
         if not result.found or result.page is None:
             await ctx.warning(f"Page not found: '{slug}'")
             raise ValueError(f"Page not found: {slug}")
@@ -289,8 +319,7 @@ async def get_page_citations(
 
     try:
         client = ctx.request_context.lifespan_context.client
-        result = await client.get_page(slug=slug, include_content=False)
-
+        result = await client.get_page(slug=slug)
         if not result.found or result.page is None:
             await ctx.warning(f"Page not found: '{slug}'")
             raise ValueError(f"Page not found: {slug}")
@@ -371,78 +400,87 @@ async def get_page_citations(
         idempotentHint=True
     )
 )
-async def get_related_pages(
-    slug: Annotated[str, Field(description="Unique slug identifier of page to find related pages for")],
-    limit: Annotated[int, Field(description="Maximum number of related pages to return (default: 10)", ge=1, le=50)] = 10,
+async def get_linked_pages(
+    slug: Annotated[str, Field(description="Unique slug identifier of page to find linked pages for")],
+    limit: Annotated[int, Field(description="Maximum number of linked pages to return (default: 10)", ge=1, le=50)] = 10,
     ctx: Context | None = None,
 ) -> CallToolResult:
-    """Get pages that are linked from the specified page."""
+    """Get pages that are linked from the specified article.
+
+    Grokipedia no longer publishes a curated linked-pages field, so links
+    are derived from /page/<slug> markdown links in the article content
+    and ranked by mention frequency, then first position.
+    """
     if ctx is None:
         raise ValueError("Context is required")
 
-    await ctx.debug(f"Fetching related pages for: '{slug}' (limit={limit})")
+    await ctx.debug(f"Fetching linked pages for: '{slug}' (limit={limit})")
 
     try:
         client = ctx.request_context.lifespan_context.client
-        result = await client.get_page(slug=slug, include_content=False)
+        result = await client.get_page(slug=slug)
 
         if not result.found or result.page is None:
             await ctx.warning(f"Page not found: '{slug}'")
             raise ValueError(f"Page not found: {slug}")
 
         page = result.page
-        linked_pages = page.linked_pages or []
+        linked_pages = page.linked_pages or _derive_linked_pages(page)
         total_count = len(linked_pages)
-        
-        related = linked_pages[:limit] if limit else linked_pages
+
+        linked = linked_pages[:limit] if limit else linked_pages
         is_limited = limit and total_count > limit
-        
-        await ctx.info(f"Found {len(related)} of {total_count} related pages for: '{page.title}'")
-        
+
+        await ctx.info(f"Found {len(linked)} of {total_count} linked pages for: '{page.title}'")
+
         if not linked_pages:
-            text_output = f"# {page.title}\n\nNo related pages found."
+            text_output = f"# {page.title}\n\nNo linked pages found."
             structured = {
                 "slug": page.slug,
                 "title": page.title,
-                "related_pages": [],
+                "linked_pages": [],
                 "total_count": 0,
                 "returned_count": 0,
             }
         else:
             header = f"# {page.title}\n\n"
             if is_limited:
-                header += f"Showing {len(related)} of {total_count} related pages:\n\n"
+                header += f"Showing {len(linked)} of {total_count} linked pages:\n\n"
             else:
-                header += f"Found {total_count} related pages:\n\n"
-            
+                header += f"Found {total_count} linked pages:\n\n"
+
             text_parts = [header]
-            for i, rel_page in enumerate(related, 1):
+            for i, rel_page in enumerate(linked, 1):
                 if isinstance(rel_page, dict):
                     title = rel_page.get("title", "Unknown")
                     slug_val = rel_page.get("slug", "")
+                    mentions = rel_page.get("mentions")
                 else:
                     title = str(rel_page)
                     slug_val = ""
+                    mentions = None
                 text_parts.append(f"{i}. {title}")
                 if slug_val:
                     text_parts.append(f"   Slug: {slug_val}")
+                if mentions is not None:
+                    text_parts.append(f"   Mentions: {mentions}")
                 text_parts.append("")
-            
+
             if is_limited:
-                text_parts.append(f"... and {total_count - len(related)} more")
-            
+                text_parts.append(f"... and {total_count - len(linked)} more")
+
             text_output = "\n".join(text_parts)
             structured = {
                 "slug": page.slug,
                 "title": page.title,
-                "related_pages": related,
+                "linked_pages": linked,
                 "total_count": total_count,
-                "returned_count": len(related),
+                "returned_count": len(linked),
             }
-            
+
             if is_limited:
                 structured["_limited"] = True
-        
+
         return CallToolResult(
             content=[TextContent(type="text", text=text_output)],
             structuredContent=structured,
@@ -483,8 +521,7 @@ async def get_page_section(
 
     try:
         client = ctx.request_context.lifespan_context.client
-        result = await client.get_page(slug=slug, include_content=True)
-
+        result = await client.get_page(slug=slug)
         if not result.found or result.page is None:
             await ctx.warning(f"Page not found: '{slug}'")
             raise ValueError(f"Page not found: {slug}")
@@ -637,8 +674,7 @@ async def get_page_sections(
 
     try:
         client = ctx.request_context.lifespan_context.client
-        result = await client.get_page(slug=slug, include_content=True)
-
+        result = await client.get_page(slug=slug)
         if not result.found or result.page is None:
             await ctx.warning(f"Page not found: '{slug}', searching for alternatives")
             search_result = await client.search(query=slug, limit=5)
