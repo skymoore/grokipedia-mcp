@@ -381,20 +381,20 @@ wheels = [
 
 [[package]]
 name = "grokipedia-api-sdk"
-version = "0.1.3"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5e/88/0d9026e3f6dbc25ca2db4dd1bee200f86677deb3a59435ccc583ede71911/grokipedia_api_sdk-0.1.3.tar.gz", hash = "sha256:dd3b6700312925c8499aeb10537ef76ae9d8de9268778652dd1f644f08e39ef6", size = 12834, upload-time = "2025-10-30T00:04:10.143Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/44/44/e946c96c7dd0d658c5f73cef443e9fb4c7fe03a7c706571a39786a4dc613/grokipedia_api_sdk-0.2.0.tar.gz", hash = "sha256:d912adc5d70223f28f81d3a5e16e84394a8158e0f043b76675cd0a70bba378f4", size = 12928, upload-time = "2026-09-14T10:10:47.458Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/70/1c/e899674863474f1ad41998bf9eef0ca8e313680b8901cbb7c90faf44c414/grokipedia_api_sdk-0.1.3-py3-none-any.whl", hash = "sha256:59e7032cd1e2077b3e5742a6f148931d73318d982e335c83463f79c089add76d", size = 9112, upload-time = "2025-10-30T00:04:09.329Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/23/77723001c3c1c54bcbf48c7655b15afb3e887570cd8a8d6e44caa27c8a72/grokipedia_api_sdk-0.2.0-py3-none-any.whl", hash = "sha256:414b0134ef456cca010fa64624d209fced855d4ab4cc35dd8a01cbf9ef593661", size = 9198, upload-time = "2026-09-14T10:10:46.449Z" },
 ]
 
 [[package]]
 name = "grokipedia-mcp"
-version = "0.3.0"
+version = "0.4.0"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
@@ -414,7 +414,7 @@ dev = [
 requires-dist = [
     { name = "click", specifier = ">=8.4.1" },
     { name = "fastmcp", specifier = ">=3.4.2" },
-    { name = "grokipedia-api-sdk", specifier = ">=0.1.3" },
+    { name = "grokipedia-api-sdk", specifier = ">=0.2.0" },
     { name = "mcp", specifier = ">=1.28.0" },
     { name = "starlette", specifier = ">=1.3.1" },
     { name = "uvicorn", specifier = ">=0.49.0" },
