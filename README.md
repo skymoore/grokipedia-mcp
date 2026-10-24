@@ -7,7 +7,7 @@
 
 # Grokipedia MCP Server
 
-[![smithery badge](https://smithery.ai/badge/@skymoore/grokipedia-mcp)](https://smithery.ai/server/@skymoore/grokipedia-mcp)
+[![LightNow capabilities](https://lightnow.ai/badge/io.github.skymoore/grokipedia-mcp)](https://lightnow.ai/servers/io.github.skymoore/grokipedia-mcp)
 
 <a href="https://glama.ai/mcp/servers/@skymoore/grokipedia-mcp">
   <img width="380" height="200" src="https://glama.ai/mcp/servers/@skymoore/grokipedia-mcp/badge" alt="Grokipedia MCP Server" />
